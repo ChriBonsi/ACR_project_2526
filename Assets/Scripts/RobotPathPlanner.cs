@@ -2,6 +2,10 @@ using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using RosMessageTypes.PathPlanner;
 using System.Collections.Generic;
+using System;
+using Unity.VisualScripting;
+using UnityEditor;
+using RosMessageTypes.ObstacleManager;
 
 public class RobotPathPlanner : MonoBehaviour
 {
@@ -9,6 +13,8 @@ public class RobotPathPlanner : MonoBehaviour
     public int robotId = 1;
     public GameObject robot;
     public float moveSpeed = 3f;
+    public float perceptionRadius = 1f;
+    public float obstacleDistanceThreshold = 1f;
 
     [Header("Request")]
     public int endX = 3;
@@ -16,6 +22,9 @@ public class RobotPathPlanner : MonoBehaviour
 
     private ROSConnection ros;
     private Queue<Vector3> pathQueue = new();
+    private bool isMoving = true;
+    private bool obstacleDetected = false;
+    private Vector3 lastPosition;
 
     void Start()
     {
@@ -25,18 +34,62 @@ public class RobotPathPlanner : MonoBehaviour
         ros.Subscribe<PathPlannerResponseMsg>("path_planner/response", ResultCallback);
 
         SendRequest();
+
+        perceptionRadius *= robot.transform.lossyScale.x;
     }
 
     void Update()
     {
         if (robot == null || pathQueue.Count == 0) return;
 
+        //if (!isMoving) return;
+
         Vector3 target = pathQueue.Peek();
+
+        CheckForObstacles(target);
+        
+        isMoving = !obstacleDetected;
+
+        if (!isMoving) return;
+
         robot.transform.position =
             Vector3.MoveTowards(robot.transform.position, target, moveSpeed * Time.deltaTime);
 
+            lastPosition = robot.transform.position;
+
         if (Vector3.Distance(robot.transform.position, target) < 0.02f)
             pathQueue.Dequeue();
+    }
+
+    private void CheckForObstacles(Vector3 target)
+    {
+        RaycastHit2D[] hits = Physics2D.CircleCastAll(robot.transform.position, perceptionRadius, target - robot.transform.position,
+            Vector3.Distance(robot.transform.position, target));
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null && hit.collider.gameObject != robot)
+            {
+                //Debug.Log(hit.transform.position + " - " + hit.distance);
+                if (hit.distance < obstacleDistanceThreshold && !obstacleDetected)
+                {
+                    /* Debug.LogWarning($"[Robot {robotId}] Obstacle detected! Stopping movement.");
+                    Debug.LogWarning("Hit object: " + hit.collider.gameObject.name); */
+
+                    obstacleDetected = true;
+
+                    var req = new ObstacleManagerSubscriberMsg()
+                    {
+                        x = (int)hit.transform.position.x,
+                        y = (int)hit.transform.position.y,
+                        type = "obstacle"
+                    };
+                    ros.Publish("obstacle_manager/report_obstacle", req);
+                    Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
+                    return;
+                }
+            }
+        }
     }
 
     public void SendRequest()

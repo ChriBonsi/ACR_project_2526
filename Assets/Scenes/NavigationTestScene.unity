@@ -6154,6 +6154,7 @@ GameObject:
   - component: {fileID: 415743902}
   - component: {fileID: 415743901}
   - component: {fileID: 415743900}
+  - component: {fileID: 415743903}
   m_Layer: 0
   m_Name: Robot (1)
   m_TagString: Untagged
@@ -6176,6 +6177,8 @@ MonoBehaviour:
   robotId: 2
   robot: {fileID: 415743899}
   moveSpeed: 0.5
+  perceptionRadius: 1
+  obstacleDistanceThreshold: 1
   endX: 4
   endY: 1
 --- !u!212 &415743901
@@ -6251,6 +6254,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 187389288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &415743903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415743899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69469c0cd4c5647968d5fbd078686e03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotRange
+  showRange: 1
+  rangeRadius: 1
+  rangeSegments: 64
+  rangeColor: {r: 0, g: 0.6, b: 1, a: 0.85}
 --- !u!1001 &454615578
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7413,6 +7432,7 @@ GameObject:
   - component: {fileID: 1049281398}
   - component: {fileID: 1049281397}
   - component: {fileID: 1049281396}
+  - component: {fileID: 1049281399}
   m_Layer: 0
   m_Name: Robot (2)
   m_TagString: Untagged
@@ -7435,6 +7455,8 @@ MonoBehaviour:
   robotId: 3
   robot: {fileID: 1049281395}
   moveSpeed: 0.5
+  perceptionRadius: 1
+  obstacleDistanceThreshold: 1
   endX: 1
   endY: 1
 --- !u!212 &1049281397
@@ -7510,6 +7532,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 187389288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1049281399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1049281395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69469c0cd4c5647968d5fbd078686e03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotRange
+  showRange: 1
+  rangeRadius: 1
+  rangeSegments: 64
+  rangeColor: {r: 0, g: 0.6, b: 1, a: 0.85}
 --- !u!1001 &1060936830
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7960,6 +7998,7 @@ GameObject:
   - component: {fileID: 1341869749}
   - component: {fileID: 1341869748}
   - component: {fileID: 1341869750}
+  - component: {fileID: 1341869751}
   m_Layer: 0
   m_Name: Robot
   m_TagString: Untagged
@@ -8035,7 +8074,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 1, y: 1, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 187389288}
@@ -8055,8 +8094,26 @@ MonoBehaviour:
   robotId: 1
   robot: {fileID: 1341869747}
   moveSpeed: 0.5
+  perceptionRadius: 1
+  obstacleDistanceThreshold: 1
   endX: 3
   endY: 3
+--- !u!114 &1341869751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1341869747}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69469c0cd4c5647968d5fbd078686e03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotRange
+  showRange: 1
+  rangeRadius: 1
+  rangeSegments: 64
+  rangeColor: {r: 0, g: 0.6, b: 1, a: 0.85}
 --- !u!1001 &1363062141
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9169,6 +9226,67 @@ Transform:
   - {fileID: 888586485}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1351409259819725470
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 193506915175613898, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5299321625956168810, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_Name
+      value: Obstacle
+      objectReference: {fileID: 0}
+    - target: {fileID: 5299321625956168810, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 77c65684b290f407fbbe77c79dc10ea1, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -9179,3 +9297,4 @@ SceneRoots:
   - {fileID: 2092474775}
   - {fileID: 2107498676}
   - {fileID: 187389288}
+  - {fileID: 1351409259819725470}
