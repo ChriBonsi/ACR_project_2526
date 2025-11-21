@@ -3,6 +3,7 @@ using Unity.Robotics.ROSTCPConnector;
 using RosMessageTypes.PathPlanner;
 using System.Collections.Generic;
 using RosMessageTypes.ObstacleManager;
+using System.Collections;
 
 public class Robot : MonoBehaviour
 {
@@ -21,10 +22,10 @@ public class Robot : MonoBehaviour
 
     private ROSConnection ros;
     private Queue<Vector3> pathQueue = new();
-    private bool isMoving = true;
     private bool obstacleDetected = false;
     private int destinationIndex = 0;
     private bool isPathRequestPending = false;
+    private bool isCleaning = false;
 
     void Start()
     {
@@ -48,11 +49,16 @@ public class Robot : MonoBehaviour
             return;
         }
 
+        if (isCleaning) return;
+
         Vector3 target = pathQueue.Peek();
         CheckForObstacles(target);
-        isMoving = !obstacleDetected;
-        if (!isMoving) return;
+        if (obstacleDetected) return;
         Move(target);
+        if (Vector3.Distance(gameObject.transform.position, target) < 0.02f)
+        {
+            pathQueue.Dequeue();
+        }
     }
 
     private void CheckAndAskForNewPath()
@@ -70,43 +76,66 @@ public class Robot : MonoBehaviour
     {
         gameObject.transform.position =
             Vector3.MoveTowards(gameObject.transform.position, target, moveSpeed * Time.deltaTime);
-
-        //Debug.Log($"[Robot {robotId}] Moving towards ({target.x}, {target.y})");
-
-        if (Vector3.Distance(gameObject.transform.position, target) < 0.02f)
-            pathQueue.Dequeue();
     }
 
     private void CheckForObstacles(Vector3 target)
     {
         RaycastHit2D[] hits = Physics2D.CircleCastAll(gameObject.transform.position, perceptionRadius, target - gameObject.transform.position,
             Vector3.Distance(gameObject.transform.position, target));
+        
+        if(hits.Length == 0)
+        {
+            obstacleDetected = false;
+            return;
+        }
 
         foreach (var hit in hits)
         {
             GameObject objectHit = hit.collider != null ? hit.collider.gameObject : null;
             if (objectHit != null && objectHit != gameObject)
             {
-                //Debug.Log(hit.transform.position + " - " + hit.distance);
-                if (hit.distance < obstacleDistanceThreshold && !obstacleDetected)
+                if (hit.distance < obstacleDistanceThreshold)
                 {
-                    /* Debug.LogWarning($"[Robot {robotId}] Obstacle detected! Stopping movement.");
-                    Debug.LogWarning("Hit object: " + hit.collider.gameObject.name); */
+                    if(objectHit.CompareTag("DirtObstacle") && robotType == "cleaner")
+                    { 
+                        if(Vector3.Distance(gameObject.transform.position, objectHit.transform.position) < 0.1f)
+                        {
+                            if (!isCleaning)
+                            {
+                                StartCoroutine(CleanDirtRoutine(objectHit));
+                            }
+                            obstacleDetected = true;
+                            return;
+                        }
+                        
+                        continue;
+                    }
 
-                    var req = new ObstacleManagerSubscriberMsg()
+                    if (!obstacleDetected)
                     {
-                        x = hit.transform.position.x,
-                        y = hit.transform.position.y,
-                        type = objectHit.tag
-                    };
-                    ros.Publish("obstacle_manager/report_obstacle", req);
-                    Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
-
-                    obstacleDetected = true;
-                    return;
+                        var req = new ObstacleManagerSubscriberMsg()
+                        {
+                            x = hit.transform.position.x,
+                            y = hit.transform.position.y,
+                            type = objectHit.tag
+                        };
+                        ros.Publish("obstacle_manager/report_obstacle", req);
+                        Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
+                        obstacleDetected = true;
+                        return;
+                    }
                 }
             }
         }
+    }
+
+    private IEnumerator CleanDirtRoutine(GameObject dirt)
+    {
+        isCleaning = true;
+        Debug.Log($"[Robot {robotId}] Cleaning dirt at {dirt.transform.position}...");
+        yield return new WaitForSeconds(2f);
+        if (dirt != null) Destroy(dirt);
+        isCleaning = false;
     }
 
     public void SendRequest()
