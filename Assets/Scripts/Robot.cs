@@ -3,6 +3,7 @@ using Unity.Robotics.ROSTCPConnector;
 using RosMessageTypes.PathPlanner;
 using System.Collections.Generic;
 using RosMessageTypes.ObstacleManager;
+using RosMessageTypes.RobotManager;
 
 public class Robot : MonoBehaviour
 {
@@ -25,6 +26,10 @@ public class Robot : MonoBehaviour
     private int destinationIndex = 0;
     private bool isPathRequestPending = false;
     protected bool isPerformingTask = false;
+    private float trackerTimer = 0f;
+    private const float trackerInterval = 1f;
+    private float startX;
+    private float startY;
 
     void Start()
     {
@@ -40,6 +45,8 @@ public class Robot : MonoBehaviour
     void Update()
     {
         if (gameObject == null) return;
+
+        SendTrackingData();
 
         if (pathQueue.Count == 0)
         {
@@ -59,10 +66,42 @@ public class Robot : MonoBehaviour
         }
     }
 
+    private void SendTrackingData()
+    {
+        trackerTimer += Time.deltaTime;
+        if (trackerTimer >= trackerInterval)
+        {
+            var trackerMsg = new RobotManagerTrackerSubscriberMsg()
+            {
+                robot_id = robotId,
+                current_x = gameObject.transform.position.x,
+                current_y = gameObject.transform.position.y,
+                start_x = startX,
+                start_y = startY,
+                end_x = endX,
+                end_y = endY,
+                robot_type = robotType,
+                destinations_x = destinations.ConvertAll(v => v.x).ToArray(),
+                destinations_y = destinations.ConvertAll(v => v.y).ToArray(),
+                move_speed = moveSpeed,
+                perception_radius = perceptionRadius,
+                obstacle_distance_threshold = obstacleDistanceThreshold,
+                loop = loop,
+                obstacle_detected = obstacleDetected,
+                performing_task = isPerformingTask
+            };            
+            Debug.Log($"[Robot {robotId}] Sent tracking data.");
+            RobotManagerClient.SendTrackingData(trackerMsg);
+            trackerTimer = 0f;
+        }
+    }
+
     private void CheckAndAskForNewPath()
     {
         if (loop && !isPathRequestPending)
         {
+            startX = destinations[destinationIndex].x;
+            startY = destinations[destinationIndex].y;
             destinationIndex = (destinationIndex + 1) % destinations.Count;
             endX = destinations[destinationIndex].x;
             endY = destinations[destinationIndex].y;

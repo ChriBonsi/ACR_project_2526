@@ -8,26 +8,26 @@ using Unity.Robotics.ROSTCPConnector.MessageGeneration;
 namespace RosMessageTypes.RobotManager
 {
     [Serializable]
-    public class RobotManagerSubscriberMsg : Message
+    public class RobotManagerRobotSubscriberMsg : Message
     {
-        public const string k_RosMessageName = "robot_manager/RobotManagerSubscriber";
+        public const string k_RosMessageName = "robot_manager/RobotManagerRobotSubscriber";
         public override string RosMessageName => k_RosMessageName;
 
         public string state;
 
-        public RobotManagerSubscriberMsg()
+        public RobotManagerRobotSubscriberMsg()
         {
             this.state = "";
         }
 
-        public RobotManagerSubscriberMsg(string state)
+        public RobotManagerRobotSubscriberMsg(string state)
         {
             this.state = state;
         }
 
-        public static RobotManagerSubscriberMsg Deserialize(MessageDeserializer deserializer) => new RobotManagerSubscriberMsg(deserializer);
+        public static RobotManagerRobotSubscriberMsg Deserialize(MessageDeserializer deserializer) => new RobotManagerRobotSubscriberMsg(deserializer);
 
-        private RobotManagerSubscriberMsg(MessageDeserializer deserializer)
+        private RobotManagerRobotSubscriberMsg(MessageDeserializer deserializer)
         {
             deserializer.Read(out this.state);
         }
@@ -39,7 +39,7 @@ namespace RosMessageTypes.RobotManager
 
         public override string ToString()
         {
-            return "RobotManagerSubscriberMsg: " +
+            return "RobotManagerRobotSubscriberMsg: " +
             "\nstate: " + state.ToString();
         }
 

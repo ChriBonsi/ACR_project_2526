@@ -8,9 +8,9 @@ using Unity.Robotics.ROSTCPConnector.MessageGeneration;
 namespace RosMessageTypes.RobotManager
 {
     [Serializable]
-    public class RobotManagerPublisherMsg : Message
+    public class RobotManagerRobotPublisherMsg : Message
     {
-        public const string k_RosMessageName = "robot_manager/RobotManagerPublisher";
+        public const string k_RosMessageName = "robot_manager/RobotManagerRobotPublisher";
         public override string RosMessageName => k_RosMessageName;
 
         public int robot_id;
@@ -26,7 +26,7 @@ namespace RosMessageTypes.RobotManager
         public float[] path_y;
         public bool loop;
 
-        public RobotManagerPublisherMsg()
+        public RobotManagerRobotPublisherMsg()
         {
             this.robot_id = 0;
             this.robot_type = "";
@@ -42,7 +42,7 @@ namespace RosMessageTypes.RobotManager
             this.loop = false;
         }
 
-        public RobotManagerPublisherMsg(int robot_id, string robot_type, float move_speed, float perception_radius, float obstacle_distance_threshold, float start_x, float start_y, float end_x, float end_y, float[] path_x, float[] path_y, bool loop)
+        public RobotManagerRobotPublisherMsg(int robot_id, string robot_type, float move_speed, float perception_radius, float obstacle_distance_threshold, float start_x, float start_y, float end_x, float end_y, float[] path_x, float[] path_y, bool loop)
         {
             this.robot_id = robot_id;
             this.robot_type = robot_type;
@@ -58,9 +58,9 @@ namespace RosMessageTypes.RobotManager
             this.loop = loop;
         }
 
-        public static RobotManagerPublisherMsg Deserialize(MessageDeserializer deserializer) => new RobotManagerPublisherMsg(deserializer);
+        public static RobotManagerRobotPublisherMsg Deserialize(MessageDeserializer deserializer) => new RobotManagerRobotPublisherMsg(deserializer);
 
-        private RobotManagerPublisherMsg(MessageDeserializer deserializer)
+        private RobotManagerRobotPublisherMsg(MessageDeserializer deserializer)
         {
             deserializer.Read(out this.robot_id);
             deserializer.Read(out this.robot_type);
@@ -96,7 +96,7 @@ namespace RosMessageTypes.RobotManager
 
         public override string ToString()
         {
-            return "RobotManagerPublisherMsg: " +
+            return "RobotManagerRobotPublisherMsg: " +
             "\nrobot_id: " + robot_id.ToString() +
             "\nrobot_type: " + robot_type.ToString() +
             "\nmove_speed: " + move_speed.ToString() +

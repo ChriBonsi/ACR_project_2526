@@ -11,7 +11,8 @@ public class ROSGlobalPublisher : MonoBehaviour
         var ros = ROSConnection.GetOrCreateInstance();
         ros.RegisterPublisher<PathPlannerRequestMsg>("path_planner/request");
         ros.RegisterPublisher<ObstacleManagerSubscriberMsg>("obstacle_manager/report_obstacle");
-        ros.RegisterPublisher<RobotManagerSubscriberMsg>("robot_manager/subscribe_robot"); // changed type
+        ros.RegisterPublisher<RobotManagerRobotSubscriberMsg>("robot_manager/subscribe_robot");
+        ros.RegisterPublisher<RobotManagerTrackerSubscriberMsg>("robot_manager/subscribe_tracker");
         Debug.Log("Global ROS publishers registered.");
     }
 }

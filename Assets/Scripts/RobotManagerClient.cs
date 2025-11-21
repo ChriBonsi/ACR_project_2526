@@ -6,15 +6,15 @@ using System.Collections.Generic;
 public class RobotManagerClient : MonoBehaviour
 {
     public GameObject robotPrefab;
-    private ROSConnection ros;
+    private static ROSConnection ros;
 
     void Start()
     {
         ros = ROSConnection.GetOrCreateInstance();
 
-        ros.Subscribe<RobotManagerPublisherMsg>("robot_manager/publish_robot", SpawnRobots);
+        ros.Subscribe<RobotManagerRobotPublisherMsg>("robot_manager/publish_robot", SpawnRobots);
 
-        var subscribeMsg = new RobotManagerSubscriberMsg()
+        var subscribeMsg = new RobotManagerRobotSubscriberMsg()
         {
             state = "ready"
         };
@@ -27,7 +27,7 @@ public class RobotManagerClient : MonoBehaviour
 
     }
 
-    private void SpawnRobots(RobotManagerPublisherMsg msg)
+    private void SpawnRobots(RobotManagerRobotPublisherMsg msg)
     {
         Debug.Log("Spawning robot with ID: " + msg.robot_id);
         GameObject robotInstance = Instantiate(robotPrefab);
@@ -51,5 +51,11 @@ public class RobotManagerClient : MonoBehaviour
         robot.perceptionRadius = msg.perception_radius;
         robot.obstacleDistanceThreshold = msg.obstacle_distance_threshold;
         robot.robotType = msg.robot_type;
+    }
+
+    public static void SendTrackingData(RobotManagerTrackerSubscriberMsg msg)
+    {
+        ros.Publish("robot_manager/subscribe_tracker", msg);
+        Debug.Log($"[RobotManagerClient] Published tracking data for Robot ID: {msg.robot_id}");
     }
 }
