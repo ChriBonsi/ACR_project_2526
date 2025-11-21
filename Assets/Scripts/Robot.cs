@@ -80,8 +80,8 @@ public class Robot : MonoBehaviour
     {
         RaycastHit2D[] hits = Physics2D.CircleCastAll(gameObject.transform.position, perceptionRadius, target - gameObject.transform.position,
             Vector3.Distance(gameObject.transform.position, target));
-        
-        if(hits.Length == 0)
+
+        if (hits.Length == 0)
         {
             obstacleDetected = false;
             return;
@@ -90,30 +90,21 @@ public class Robot : MonoBehaviour
         foreach (var hit in hits)
         {
             GameObject objectHit = hit.collider != null ? hit.collider.gameObject : null;
-            if (objectHit != null && objectHit != gameObject)
+            if (objectHit == null || objectHit == gameObject) continue;
+            if (hit.distance > obstacleDistanceThreshold) continue;
+            if (HandleSpecialObstacle(objectHit)) continue;
+            if (obstacleDetected) return;
+            var req = new ObstacleManagerSubscriberMsg()
             {
-                if (hit.distance < obstacleDistanceThreshold)
-                {
-                    if (HandleSpecialObstacle(objectHit)) 
-                    {
-                        continue;
-                    }
+                x = hit.transform.position.x,
+                y = hit.transform.position.y,
+                type = objectHit.tag
+            };
+            ros.Publish("obstacle_manager/report_obstacle", req);
+            Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
+            obstacleDetected = true;
+            return;
 
-                    if (!obstacleDetected)
-                    {
-                        var req = new ObstacleManagerSubscriberMsg()
-                        {
-                            x = hit.transform.position.x,
-                            y = hit.transform.position.y,
-                            type = objectHit.tag
-                        };
-                        ros.Publish("obstacle_manager/report_obstacle", req);
-                        Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
-                        obstacleDetected = true;
-                        return;
-                    }
-                }
-            }
         }
     }
 
