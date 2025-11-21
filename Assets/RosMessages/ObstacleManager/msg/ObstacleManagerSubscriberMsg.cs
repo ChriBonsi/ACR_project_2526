@@ -13,18 +13,18 @@ namespace RosMessageTypes.ObstacleManager
         public const string k_RosMessageName = "obstacle_manager/ObstacleManagerSubscriber";
         public override string RosMessageName => k_RosMessageName;
 
-        public int x;
-        public int y;
+        public float x;
+        public float y;
         public string type;
 
         public ObstacleManagerSubscriberMsg()
         {
-            this.x = 0;
-            this.y = 0;
+            this.x = 0.0f;
+            this.y = 0.0f;
             this.type = "";
         }
 
-        public ObstacleManagerSubscriberMsg(int x, int y, string type)
+        public ObstacleManagerSubscriberMsg(float x, float y, string type)
         {
             this.x = x;
             this.y = y;

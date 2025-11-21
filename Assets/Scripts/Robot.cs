@@ -2,73 +2,86 @@ using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using RosMessageTypes.PathPlanner;
 using System.Collections.Generic;
-using System;
-using Unity.VisualScripting;
-using UnityEditor;
 using RosMessageTypes.ObstacleManager;
 
-public class RobotPathPlanner : MonoBehaviour
+public class Robot : MonoBehaviour
 {
     [Header("Robot settings")]
     public int robotId = 1;
-    public GameObject robot;
     public float moveSpeed = 3f;
     public float perceptionRadius = 1f;
     public float obstacleDistanceThreshold = 1f;
+    public string robotType = "default";
+    public List<Vector3> destinations = new();
+    public bool loop = false;
 
     [Header("Request")]
-    public int endX = 3;
-    public int endY = 3;
+    public float endX = 3;
+    public float endY = 3;
 
     private ROSConnection ros;
     private Queue<Vector3> pathQueue = new();
     private bool isMoving = true;
     private bool obstacleDetected = false;
-    private Vector3 lastPosition;
+    private int destinationIndex = 0;
+    private bool isPathRequestPending = false;
 
-    void Start()
+     void Start()
     {
         ros = ROSConnection.GetOrCreateInstance();
 
         ros.Subscribe<PathPlannerFeedbackMsg>("path_planner/feedback", FeedbackCallback);
         ros.Subscribe<PathPlannerResponseMsg>("path_planner/response", ResultCallback);
 
-        SendRequest();
+        if(destinations.Count == 0) SendRequest(); 
 
-        perceptionRadius *= robot.transform.lossyScale.x;
+        perceptionRadius *= gameObject.transform.lossyScale.x;
     }
 
-    void Update()
+     void Update()
     {
-        if (robot == null || pathQueue.Count == 0) return;
+        if (gameObject == null) return;
+
+        if (pathQueue.Count == 0)
+        {
+            if (loop && !isPathRequestPending)
+            {
+                destinationIndex = (destinationIndex + 1) % destinations.Count;
+                endX = destinations[destinationIndex].x;
+                endY = destinations[destinationIndex].y;
+                SendRequest();
+                isPathRequestPending = true;
+            }
+            return;
+        }
 
         //if (!isMoving) return;
 
         Vector3 target = pathQueue.Peek();
 
         CheckForObstacles(target);
-        
+
         isMoving = !obstacleDetected;
 
         if (!isMoving) return;
 
-        robot.transform.position =
-            Vector3.MoveTowards(robot.transform.position, target, moveSpeed * Time.deltaTime);
+        gameObject.transform.position =
+            Vector3.MoveTowards(gameObject.transform.position, target, moveSpeed * Time.deltaTime);
 
-            lastPosition = robot.transform.position;
+        //Debug.Log($"[Robot {robotId}] Moving towards ({target.x}, {target.y})");
 
-        if (Vector3.Distance(robot.transform.position, target) < 0.02f)
+        if (Vector3.Distance(gameObject.transform.position, target) < 0.02f)
             pathQueue.Dequeue();
     }
 
     private void CheckForObstacles(Vector3 target)
     {
-        RaycastHit2D[] hits = Physics2D.CircleCastAll(robot.transform.position, perceptionRadius, target - robot.transform.position,
-            Vector3.Distance(robot.transform.position, target));
+        RaycastHit2D[] hits = Physics2D.CircleCastAll(gameObject.transform.position, perceptionRadius, target - gameObject.transform.position,
+            Vector3.Distance(gameObject.transform.position, target));
 
         foreach (var hit in hits)
         {
-            if (hit.collider != null && hit.collider.gameObject != robot)
+            if (hit.collider != null && hit.collider.gameObject != gameObject)
             {
                 //Debug.Log(hit.transform.position + " - " + hit.distance);
                 if (hit.distance < obstacleDistanceThreshold && !obstacleDetected)
@@ -80,9 +93,9 @@ public class RobotPathPlanner : MonoBehaviour
 
                     var req = new ObstacleManagerSubscriberMsg()
                     {
-                        x = (int)hit.transform.position.x,
-                        y = (int)hit.transform.position.y,
-                        type = "obstacle"
+                        x = hit.transform.position.x,
+                        y = hit.transform.position.y,
+                        type = hit.collider.gameObject.tag
                     };
                     ros.Publish("obstacle_manager/report_obstacle", req);
                     Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
@@ -94,9 +107,9 @@ public class RobotPathPlanner : MonoBehaviour
 
     public void SendRequest()
     {
-        Transform transform = robot.transform;
-        int startX = (int)transform.position.x;
-        int startY = (int)transform.position.y;
+        Transform transform = gameObject.transform;
+        float startX = transform.position.x;
+        float startY = transform.position.y;
         var req = new PathPlannerRequestMsg()
         {
             robot_id = robotId,
@@ -127,7 +140,7 @@ public class RobotPathPlanner : MonoBehaviour
             return;
         }
 
-        pathQueue.Clear();
+        //pathQueue.Clear();
 
         for (int i = 0; i < res.path_x.Length; i++)
         {
@@ -136,9 +149,12 @@ public class RobotPathPlanner : MonoBehaviour
                 res.path_y[i],
                 0f
             );
+            //if (Vector3.Distance(robot.transform.position, point) < 0.05f) continue;
+
             pathQueue.Enqueue(point);
         }
 
+        isPathRequestPending = false;
         Debug.Log($"[Robot {robotId}] Received path with {res.path_x.Length} points.");
     }
 }

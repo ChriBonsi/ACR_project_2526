@@ -14,19 +14,19 @@ namespace RosMessageTypes.PathPlanner
         public override string RosMessageName => k_RosMessageName;
 
         public int robot_id;
-        public int current_x;
-        public int current_y;
+        public float current_x;
+        public float current_y;
         public float percent_complete;
 
         public PathPlannerFeedbackMsg()
         {
             this.robot_id = 0;
-            this.current_x = 0;
-            this.current_y = 0;
+            this.current_x = 0.0f;
+            this.current_y = 0.0f;
             this.percent_complete = 0.0f;
         }
 
-        public PathPlannerFeedbackMsg(int robot_id, int current_x, int current_y, float percent_complete)
+        public PathPlannerFeedbackMsg(int robot_id, float current_x, float current_y, float percent_complete)
         {
             this.robot_id = robot_id;
             this.current_x = current_x;

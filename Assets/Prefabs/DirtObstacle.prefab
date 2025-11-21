@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 201795399870190863}
   - component: {fileID: 6130655314857046345}
   m_Layer: 0
-  m_Name: Obstacle
-  m_TagString: Untagged
+  m_Name: DirtObstacle
+  m_TagString: DirtObstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

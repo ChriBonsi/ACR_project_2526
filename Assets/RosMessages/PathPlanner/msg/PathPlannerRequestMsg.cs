@@ -14,21 +14,21 @@ namespace RosMessageTypes.PathPlanner
         public override string RosMessageName => k_RosMessageName;
 
         public int robot_id;
-        public int start_x;
-        public int start_y;
-        public int end_x;
-        public int end_y;
+        public float start_x;
+        public float start_y;
+        public float end_x;
+        public float end_y;
 
         public PathPlannerRequestMsg()
         {
             this.robot_id = 0;
-            this.start_x = 0;
-            this.start_y = 0;
-            this.end_x = 0;
-            this.end_y = 0;
+            this.start_x = 0.0f;
+            this.start_y = 0.0f;
+            this.end_x = 0.0f;
+            this.end_y = 0.0f;
         }
 
-        public PathPlannerRequestMsg(int robot_id, int start_x, int start_y, int end_x, int end_y)
+        public PathPlannerRequestMsg(int robot_id, float start_x, float start_y, float end_x, float end_y)
         {
             this.robot_id = robot_id;
             this.start_x = start_x;

@@ -14,19 +14,19 @@ namespace RosMessageTypes.PathPlanner
         public override string RosMessageName => k_RosMessageName;
 
         public int robot_id;
-        public int[] path_x;
-        public int[] path_y;
+        public float[] path_x;
+        public float[] path_y;
         public bool success;
 
         public PathPlannerResponseMsg()
         {
             this.robot_id = 0;
-            this.path_x = new int[0];
-            this.path_y = new int[0];
+            this.path_x = new float[0];
+            this.path_y = new float[0];
             this.success = false;
         }
 
-        public PathPlannerResponseMsg(int robot_id, int[] path_x, int[] path_y, bool success)
+        public PathPlannerResponseMsg(int robot_id, float[] path_x, float[] path_y, bool success)
         {
             this.robot_id = robot_id;
             this.path_x = path_x;
@@ -39,8 +39,8 @@ namespace RosMessageTypes.PathPlanner
         private PathPlannerResponseMsg(MessageDeserializer deserializer)
         {
             deserializer.Read(out this.robot_id);
-            deserializer.Read(out this.path_x, sizeof(int), deserializer.ReadLength());
-            deserializer.Read(out this.path_y, sizeof(int), deserializer.ReadLength());
+            deserializer.Read(out this.path_x, sizeof(float), deserializer.ReadLength());
+            deserializer.Read(out this.path_y, sizeof(float), deserializer.ReadLength());
             deserializer.Read(out this.success);
         }
 
