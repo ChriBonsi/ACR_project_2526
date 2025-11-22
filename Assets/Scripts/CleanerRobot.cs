@@ -33,4 +33,8 @@ public class CleanerRobot : Robot
         isPerformingTask = false;
         //obstacleDetected = false; 
     }
+
+    protected override void UpdateTask()
+    {
+    }
 }

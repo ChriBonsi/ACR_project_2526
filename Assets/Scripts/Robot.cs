@@ -24,7 +24,7 @@ public class Robot : MonoBehaviour
     protected Queue<Vector3> pathQueue = new();
     protected bool obstacleDetected = false;
     private int destinationIndex = 0;
-    private bool isPathRequestPending = false;
+    protected bool isPathRequestPending = false;
     protected bool isPerformingTask = false;
     private float trackerTimer = 0f;
     private const float trackerInterval = 1f;
@@ -48,22 +48,21 @@ public class Robot : MonoBehaviour
 
         SendTrackingData();
 
+        UpdateTask();
+
+        if (isPerformingTask) return;
+
         if (pathQueue.Count == 0)
         {
             CheckAndAskForNewPath();
             return;
         }
 
-        if (isPerformingTask) return;
-
         Vector3 target = pathQueue.Peek();
         CheckForObstacles(target);
         if (obstacleDetected) return;
         Move(target);
-        if (Vector3.Distance(gameObject.transform.position, target) < 0.02f)
-        {
-            pathQueue.Dequeue();
-        }
+        CheckIfQueuedPointReached(target);
     }
 
     private void SendTrackingData()
@@ -109,10 +108,18 @@ public class Robot : MonoBehaviour
         }
     }
 
-    private void Move(Vector3 target)
+    protected void Move(Vector3 target)
     {
         gameObject.transform.position =
             Vector3.MoveTowards(gameObject.transform.position, target, moveSpeed * Time.deltaTime);
+    }
+
+    protected void CheckIfQueuedPointReached(Vector3 target)
+    {
+        if (Vector3.Distance(gameObject.transform.position, target) < 0.02f)
+        {
+            pathQueue.Dequeue();
+        }
     }
 
     private void CheckForObstacles(Vector3 target)
@@ -152,23 +159,28 @@ public class Robot : MonoBehaviour
         return false;
     }
 
+    protected virtual void UpdateTask()
+    {
+        
+    }
+
     public void SendRequest()
     {
         Transform transform = gameObject.transform;
-        float startX = transform.position.x;
-        float startY = transform.position.y;
+        float currentX = transform.position.x;
+        float currentY = transform.position.y;
         var req = new PathPlannerRequestMsg()
         {
             robot_id = robotId,
-            start_x = startX,
-            start_y = startY,
+            start_x = currentX,
+            start_y = currentY,
             end_x = endX,
             end_y = endY
         };
 
         ros.Publish("path_planner/request", req);
         isPathRequestPending = true;
-        Debug.Log($"[Robot {robotId}] Sent path request: ({startX},{startY}), ({endX},{endY})");
+        Debug.Log($"[Robot {robotId}] Sent path request: ({currentX},{currentY}), ({endX},{endY})");
     }
 
     void ResultCallback(PathPlannerResponseMsg res)

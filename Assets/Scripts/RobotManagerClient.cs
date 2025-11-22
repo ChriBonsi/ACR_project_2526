@@ -34,6 +34,7 @@ public class RobotManagerClient : MonoBehaviour
         Robot robot = msg.robot_type switch
         {
             "cleaner" => robotInstance.AddComponent<CleanerRobot>(),
+            "security" => robotInstance.AddComponent<SecurityRobot>(),
             _ => robotInstance.AddComponent<Robot>(),
         };
         robotInstance.transform.position = new Vector3(msg.start_x, msg.start_y, 0);
