@@ -23,7 +23,7 @@ public class Robot : MonoBehaviour
     protected ROSConnection ros;
     protected Queue<Vector3> pathQueue = new();
     protected bool obstacleDetected = false;
-    private int destinationIndex = 0;
+    protected int destinationIndex = 0;
     protected bool isPathRequestPending = false;
     protected bool isPerformingTask = false;
     private float trackerTimer = 0f;

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SecurityRobot : Robot
 {
@@ -27,9 +28,9 @@ public class SecurityRobot : Robot
         isPerformingTask = true;
         pathQueue.Clear();
         Debug.Log($"[SecurityRobot {robotId}] Clearing unattended obstacle at {unattended.transform.position}...");
-        
+
         yield return new WaitForSeconds(2f);
-        
+
         if (unattended != null)
         {
             unattended.transform.SetParent(transform);
@@ -43,7 +44,7 @@ public class SecurityRobot : Robot
 
     protected override void UpdateTask()
     {
-        if(!isPerformingTask) return;
+        if (!isPerformingTask) return;
         if (isPathRequestPending) return;
 
         if (pathQueue.Count > 0)
@@ -61,11 +62,28 @@ public class SecurityRobot : Robot
                     Destroy(child.gameObject);
                 }
             }
-            
-            Debug.Log($"[SecurityRobot {robotId}] Package destroyed at (9,1).");
-            
+
+            Debug.Log($"[SecurityRobot {robotId}] Package destroyed at {securedLocation}.");
+
+            SetNextDestination();
             isPerformingTask = false;
             obstacleDetected = false;
         }
+    }
+
+    private void SetNextDestination()
+    {
+        float minDistance = float.MaxValue;
+        int closestIndex = 0;
+        for (int i = 0; i < destinations.Count; i++)
+        {
+            float d = Vector3.Distance(transform.position, destinations[i]);
+            if (d < minDistance)
+            {
+                minDistance = d;
+                closestIndex = i;
+            }
+        }
+        destinationIndex = closestIndex;
     }
 }
