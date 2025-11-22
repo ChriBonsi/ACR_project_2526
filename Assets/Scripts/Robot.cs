@@ -30,6 +30,8 @@ public class Robot : MonoBehaviour
     private const float trackerInterval = 1f;
     private float startX;
     private float startY;
+    private List<GameObject> reportedObstacles = new();
+    protected GameObject lastAvoided;
 
     void Start()
     {
@@ -48,19 +50,27 @@ public class Robot : MonoBehaviour
 
         SendTrackingData();
 
+        Vector3 target = Vector3.zero;
+        bool hasPath = pathQueue.Count > 0;
+        if (hasPath) target = pathQueue.Peek();
+
+        if (hasPath) 
+        {
+            CheckForObstacles(target);
+        }
+
         UpdateTask();
 
         if (isPerformingTask) return;
 
-        if (pathQueue.Count == 0)
+        if (!hasPath)
         {
             CheckAndAskForNewPath();
             return;
         }
 
-        Vector3 target = pathQueue.Peek();
-        CheckForObstacles(target);
         if (obstacleDetected) return;
+        
         Move(target);
         CheckIfQueuedPointReached(target);
     }
@@ -126,13 +136,13 @@ public class Robot : MonoBehaviour
     {
         RaycastHit2D[] hits = Physics2D.CircleCastAll(gameObject.transform.position, perceptionRadius, target - gameObject.transform.position,
             Vector3.Distance(gameObject.transform.position, target));
+        
+        obstacleDetected = false;
 
-        if (hits.Length == 0)
-        {
-            obstacleDetected = false;
-            return;
-        }
+        if (hits.Length == 0) return;
 
+        System.Array.Sort(hits, (x, y) => x.distance.CompareTo(y.distance));
+        
         foreach (var hit in hits)
         {
             GameObject objectHit = hit.collider != null ? hit.collider.gameObject : null;
@@ -140,18 +150,67 @@ public class Robot : MonoBehaviour
             if (hit.distance > obstacleDistanceThreshold) continue;
             if (HandleSpecialObstacle(objectHit)) continue;
             if (obstacleDetected) return;
-            var req = new ObstacleManagerSubscriberMsg()
-            {
-                x = hit.transform.position.x,
-                y = hit.transform.position.y,
-                type = objectHit.tag
-            };
-            ros.Publish("obstacle_manager/report_obstacle", req);
-            Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
+            ReportObstacle(objectHit);
             obstacleDetected = true;
             return;
-
         }
+    }
+
+    protected void ReportObstacle(GameObject obstacle)
+    {
+        if (reportedObstacles.Contains(obstacle)) return;
+        var req = new ObstacleManagerSubscriberMsg()
+        {
+            x = obstacle.transform.position.x,
+            y = obstacle.transform.position.y,
+            type = obstacle.tag
+        };
+        ros.Publish("obstacle_manager/report_obstacle", req);
+        reportedObstacles.Add(obstacle);
+        Debug.Log($"[Robot {robotId}] Reported obstacle at ({req.x}, {req.y}) to Obstacle Manager.");
+    }
+
+    protected void PerformSideStep(GameObject obstacle)
+    {
+        if (lastAvoided == obstacle) return;
+        lastAvoided = obstacle;
+
+        List<Vector3> oldPath = new(pathQueue);
+        pathQueue.Clear();
+        
+        Vector3 robotPos = transform.position;
+        Vector3 obstaclePos = obstacle.transform.position;
+        Vector3 toObstacle = obstaclePos - robotPos;
+        Vector3 forwardDir = toObstacle.normalized;
+        float distToObstacle = toObstacle.magnitude;
+        
+        Vector3 sideDir = Vector3.Cross(forwardDir, Vector3.forward);
+        
+        float sideOffset = 0.2f;
+        float clearance = obstacle.transform.localScale.x;
+
+        Vector3 pos1 = robotPos + sideDir * sideOffset;
+        Vector3 pos2 = pos1 + forwardDir * (distToObstacle + clearance);
+        Vector3 pos3 = pos2 - sideDir * sideOffset;
+
+        float reentryProgress = Vector3.Dot(pos3 - robotPos, forwardDir);
+         List<Vector3> newPath = new()
+        {
+            pos1,
+            pos2,
+            pos3
+        };
+
+        foreach (var pt in oldPath)
+        {
+            if (Vector3.Distance(pt, obstaclePos) < clearance) continue;
+            float ptProgress = Vector3.Dot(pt - robotPos, forwardDir);
+            if (ptProgress < reentryProgress) continue;
+            newPath.Add(pt);
+        }
+        
+        foreach (var p in newPath) pathQueue.Enqueue(p);
+        Debug.Log($"[CleanerRobot {robotId}] Side-stepping unattended package at {obstacle.transform.position}.");
     }
 
     protected virtual bool HandleSpecialObstacle(GameObject objectHit)
@@ -207,6 +266,7 @@ public class Robot : MonoBehaviour
             pathQueue.Enqueue(point);
         }
 
+        lastAvoided = null;
         isPathRequestPending = false;
         Debug.Log($"[Robot {robotId}] Received path with {res.path_x.Length} points.");
     }

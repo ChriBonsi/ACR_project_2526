@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class SecurityRobot : Robot
 {
     private Vector3 securedLocation = new(9, 1, 0);
+    private bool isDestroying = false;
     protected override bool HandleSpecialObstacle(GameObject objectHit)
     {
         if (objectHit.CompareTag("UnattendedObstacle"))
@@ -13,17 +14,18 @@ public class SecurityRobot : Robot
             {
                 if (!isPerformingTask)
                 {
-                    StartCoroutine(ClearUnattendedRoutine(objectHit));
+                    StartCoroutine(PickupRoutine(objectHit));
                 }
                 obstacleDetected = true;
             }
+            ReportObstacle(objectHit);
             return true;
         }
 
         return false;
     }
 
-    private IEnumerator ClearUnattendedRoutine(GameObject unattended)
+    private IEnumerator PickupRoutine(GameObject unattended)
     {
         isPerformingTask = true;
         pathQueue.Clear();
@@ -55,20 +57,30 @@ public class SecurityRobot : Robot
         }
         else if (Vector3.Distance(transform.position, securedLocation) < 0.5f)
         {
-            foreach (Transform child in transform)
-            {
-                if (child.CompareTag("UnattendedObstacle"))
-                {
-                    Destroy(child.gameObject);
-                }
-            }
-
-            Debug.Log($"[SecurityRobot {robotId}] Package destroyed at {securedLocation}.");
-
-            SetNextDestination();
-            isPerformingTask = false;
-            obstacleDetected = false;
+            if (!isDestroying) StartCoroutine(DestroyUnattendedRoutine());
         }
+    }
+
+    private IEnumerator DestroyUnattendedRoutine()
+    {
+        isDestroying = true;
+
+        yield return new WaitForSeconds(2f);
+        
+        foreach (Transform child in transform)
+        {
+            if (child.CompareTag("UnattendedObstacle"))
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        Debug.Log($"[SecurityRobot {robotId}] Package destroyed at {securedLocation}.");
+
+        SetNextDestination();
+        isPerformingTask = false;
+        obstacleDetected = false;
+        isDestroying = false;
     }
 
     private void SetNextDestination()

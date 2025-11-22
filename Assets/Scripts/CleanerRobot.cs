@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CleanerRobot : Robot
 {
@@ -15,6 +16,12 @@ public class CleanerRobot : Robot
                 }
                 obstacleDetected = true;
             }
+            return true;
+        }
+        else if (objectHit.CompareTag("UnattendedObstacle"))
+        {
+            ReportObstacle(objectHit);
+            if(Vector3.Distance(transform.position, objectHit.transform.position) < 0.2f) PerformSideStep(objectHit);
             return true;
         }
 
